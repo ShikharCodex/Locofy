@@ -1,35 +1,59 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
+// ✅ Create transporter (SMTP connection)
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 587,
-  secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+
+  port: Number(process.env.EMAIL_PORT) || 587,
+
+  secure: Number(process.env.EMAIL_PORT) === 465, // true for 465, false for 587
+
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // 16-char app password
   },
 });
 
-/**
- * Send an email
- * @param {string} to - Comma separated list or array of emails
- * @param {string} subject - Subject line
- * @param {string} text - Plain text body
- * @param {string} html - HTML body
- */
-const sendEmail = async (to, subject, text, html) => {
+// ✅ Verify connection (VERY IMPORTANT for debugging)
+const verifyEmailServer = async () => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"Locofy" <no-reply@example.com>',
+    await transporter.verify();
+    console.log("✅ Email server is ready to send messages");
+  } catch (error) {
+    console.error("❌ Email server connection failed:", error);
+  }
+};
+
+// Run verification once on startup
+verifyEmailServer();
+
+// ✅ Send Email Function
+const sendEmail = async ({ to, subject, text, html }) => {
+  try {
+    if (!to) {
+      throw new Error("Recipient email (to) is required");
+    }
+
+    const mailOptions = {
+      from:
+        process.env.EMAIL_FROM || `"Locofy App" <${process.env.EMAIL_USER}>`,
+
       to,
       subject,
-      text,
-      html,
-    });
-    console.log('Message sent: %s', info.messageId);
+      text: text || "",
+      html: html || "",
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("📧 Email sent successfully:", info.messageId);
+
     return info;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("❌ Error sending email:", error);
+
+    // VERY IMPORTANT → throw error so you can debug in routes
+    throw error;
   }
 };
 
