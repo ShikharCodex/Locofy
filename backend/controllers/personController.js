@@ -39,7 +39,12 @@ const createPerson = async (req, res) => {
             <br/>
             <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
           `;
-          await sendEmail(emails, subject, 'A new missing person has been reported.', html);
+          await sendEmail({
+            to: emails, 
+            subject, 
+            text: 'A new missing person has been reported.', 
+            html
+          });
         }
       } catch (err) {
         console.error('Failed to notify users via email', err);
