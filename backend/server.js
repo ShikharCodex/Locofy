@@ -8,7 +8,6 @@ connectDB();
 
 const app = express();
 
-// ✅ Correct allowed origins
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
@@ -17,10 +16,9 @@ const allowedOrigins = [
   "https://www.locofy.xyz",
 ];
 
-// ✅ CORS config
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log("🌐 Incoming Origin:", origin);
+    console.log("🌐 Origin:", origin);
 
     if (!origin) return callback(null, true);
 
@@ -30,28 +28,21 @@ const corsOptions = {
       callback(new Error("❌ Not allowed by CORS: " + origin));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 };
 
-// ✅ Apply CORS
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // 🔥 IMPORTANT
+app.use(cors(corsOptions)); // ✅ Enough for CORS
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/persons", require("./routes/personRoutes"));
 
-// Health check
 app.get("/", (req, res) => {
   res.send("API Running...");
 });
 
-// Error middleware
 app.use((err, req, res, next) => {
   console.error("🔥 ERROR:", err);
 
