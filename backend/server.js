@@ -8,25 +8,35 @@ connectDB();
 
 const app = express();
 
-// CORS Strategy (Dynamic for Production & Localhost)
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3000', 'https://locofy-omega.vercel.app, https://locofy.xyz, https//www.locofy.com'];
+// ✅ Correct allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://locofy-omega.vercel.app",
+  "https://locofy.xyz",
+  "https://www.locofy.xyz",
+];
 
+// ✅ CORS config
 const corsOptions = {
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
+    console.log("🌐 Incoming Origin:", origin);
+
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("❌ Not allowed by CORS: " + origin));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 };
 
+// ✅ Apply CORS
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // 🔥 IMPORTANT
 
 // Middleware
 app.use(express.json());
@@ -36,7 +46,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/persons", require("./routes/personRoutes"));
 
-// Health check route (VERY IMPORTANT)
+// Health check
 app.get("/", (req, res) => {
   res.send("API Running...");
 });
