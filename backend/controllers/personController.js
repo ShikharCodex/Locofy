@@ -22,35 +22,38 @@ const createPerson = async (req, res) => {
       reporterId: req.user.id
     });
 
-    // Notify all users asynchronously
-    (async () => {
-      try {
-        const users = await User.find({}).select('email');
-        const emails = users.map(user => user.email).join(',');
+    // Notify all users synchronously to completely eliminate silent background failures
+    try {
+      const users = await User.find({}).select('email');
+      const emails = users.map(user => user.email).join(',');
 
-        if (emails) {
-          const subject = `ALERT: Missing Person Registered - ${name}`;
-          const html = `
-            <h2>Missing Person Alert</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Last Seen:</strong> ${lastSeenLocation} on ${new Date(lastSeenDate).toLocaleDateString()}</p>
-            <p><strong>Description:</strong> ${clothingDescription}</p>
-            <p>Please check the application for more details and a photo. If you have any information, please contact the provided reporter details.</p>
-            <br/>
-            <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
-          `;
-          await sendEmail({
-            to: process.env.EMAIL_USER, // Send to self
-            bcc: emails, // Hidden list of all users
-            subject, 
-            text: 'A new missing person has been reported.', 
-            html
-          });
-        }
-      } catch (err) {
-        console.error('Failed to notify users via email', err);
+      if (emails) {
+        const subject = `ALERT: Missing Person Registered - ${name}`;
+        const html = `
+          <h2>Missing Person Alert</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Last Seen:</strong> ${lastSeenLocation} on ${new Date(lastSeenDate).toLocaleDateString()}</p>
+          <p><strong>Description:</strong> ${clothingDescription}</p>
+          <p>Please check the application for more details and a photo. If you have any information, please contact the provided reporter details.</p>
+          <br/>
+          <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
+        `;
+        
+        console.log("Preparing to blast emails to:", emails.length, "characters of bcc addresses");
+        
+        await sendEmail({
+          to: process.env.EMAIL_USER || emails.split(',')[0], // Bulletproof fallback
+          bcc: emails,
+          subject, 
+          text: 'A new missing person has been reported.', 
+          html
+        });
+        
+        console.log("✅ Email broadcast successfully sent out!");
       }
-    })();
+    } catch (err) {
+      console.error('❌ Failed to notify users via email! Critical error:', err.message);
+    }
 
     res.status(201).json(person);
   } catch (error) {
