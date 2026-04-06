@@ -8,7 +8,7 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS (Dynamic for Production & Localhost)
+// CORS Strategy (Dynamic for Production & Localhost)
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',') 
   : ['http://localhost:5173', 'http://localhost:3000', 'https://locofy-omega.vercel.app'];

@@ -38,9 +38,6 @@ const createPerson = async (req, res) => {
           <br/>
           <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
         `;
-        
-        console.log("Preparing to blast emails to:", emails.length, "characters of bcc addresses");
-        
         await sendEmail({
           to: process.env.EMAIL_USER || emails.split(',')[0], // Bulletproof fallback
           bcc: emails,
@@ -48,11 +45,9 @@ const createPerson = async (req, res) => {
           text: 'A new missing person has been reported.', 
           html
         });
-        
-        console.log("✅ Email broadcast successfully sent out!");
       }
     } catch (err) {
-      console.error('❌ Failed to notify users via email! Critical error:', err.message);
+      console.error('Email Notification Failed:', err.message);
     }
 
     res.status(201).json(person);

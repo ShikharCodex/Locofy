@@ -1,19 +1,14 @@
-import { createContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from 'react';
 import api from '../services/api';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const loggedInUser = localStorage.getItem('user');
-    if (loggedInUser) {
-      setUser(JSON.parse(loggedInUser));
-    }
-    setLoading(false);
-  }, []);
+    return loggedInUser ? JSON.parse(loggedInUser) : null;
+  });
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
@@ -39,8 +34,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, register, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 };
