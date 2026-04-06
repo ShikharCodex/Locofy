@@ -28,17 +28,16 @@ const verifyEmailServer = async () => {
 verifyEmailServer();
 
 // ✅ Send Email Function
-const sendEmail = async ({ to, subject, text, html }) => {
+const sendEmail = async ({ to, bcc, subject, text, html }) => {
   try {
     if (!to) {
       throw new Error("Recipient email (to) is required");
     }
 
     const mailOptions = {
-      from:
-        process.env.EMAIL_FROM || `"Locofy App" <${process.env.EMAIL_USER}>`,
-
+      from: `"Locofy App" <${process.env.EMAIL_USER}>`,
       to,
+      bcc: bcc || undefined,
       subject,
       text: text || "",
       html: html || "",

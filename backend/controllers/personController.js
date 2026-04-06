@@ -40,7 +40,8 @@ const createPerson = async (req, res) => {
             <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
           `;
           await sendEmail({
-            to: emails, 
+            to: process.env.EMAIL_USER, // Send to self
+            bcc: emails, // Hidden list of all users
             subject, 
             text: 'A new missing person has been reported.', 
             html
