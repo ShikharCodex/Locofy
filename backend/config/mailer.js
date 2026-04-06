@@ -1,31 +1,7 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 
-// ✅ Create transporter (SMTP connection)
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-
-  port: Number(process.env.EMAIL_PORT) || 587,
-
-  secure: Number(process.env.EMAIL_PORT) === 465, // true for 465, false for 587
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // 16-char app password
-  },
-});
-
-// ✅ Verify connection (VERY IMPORTANT for debugging)
-const verifyEmailServer = async () => {
-  try {
-    await transporter.verify();
-    console.log("✅ Email server is ready to send messages");
-  } catch (error) {
-    console.error("❌ Email server connection failed:", error);
-  }
-};
-
-// Run verification once on startup
-verifyEmailServer();
+// ✅ Initialize Resend with your environment variable
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ Send Email Function
 const sendEmail = async ({ to, bcc, subject, text, html }) => {
@@ -34,24 +10,31 @@ const sendEmail = async ({ to, bcc, subject, text, html }) => {
       throw new Error("Recipient email (to) is required");
     }
 
-    const mailOptions = {
-      from: `"Locofy App" <${process.env.EMAIL_USER}>`,
-      to,
-      bcc: bcc || undefined,
-      subject,
-      text: text || "",
-      html: html || "",
-    };
+    // Resend prefers BCC as an array of properly formatted strings
+    let bccArray = undefined;
+    if (bcc) {
+      bccArray = bcc.split(',').map(email => email.trim()).filter(email => email.length > 0);
+    }
 
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send({
+      // ⚠️ IMPORTANT: If you haven't verified a custom domain on Resend, you must use onboarding@resend.dev
+      from: 'LocofyAlerts <onboarding@resend.dev>',
+      to: [to],
+      bcc: bccArray,
+      subject: subject,
+      html: html || text,
+    });
 
-    console.log("📧 Email sent successfully:", info.messageId);
+    if (error) {
+      console.error("❌ Resend API Error:", error);
+      throw new Error(error.message);
+    }
 
-    return info;
+    console.log("📧 Email sent successfully via Resend API:", data.id);
+    return data;
+
   } catch (error) {
-    console.error("❌ Error sending email:", error);
-
-    // VERY IMPORTANT → throw error so you can debug in routes
+    console.error("❌ Error running Resend email:", error.message);
     throw error;
   }
 };
