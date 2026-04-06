@@ -37,7 +37,7 @@ const createPerson = async (req, res) => {
             <p><strong>Description:</strong> ${clothingDescription}</p>
             <p>Please check the application for more details and a photo. If you have any information, please contact the provided reporter details.</p>
             <br/>
-            <p><a href="http://localhost:5173/person/${person._id}">View Details</a></p>
+            <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/person/${person._id}">View Details</a></p>
           `;
           await sendEmail(emails, subject, 'A new missing person has been reported.', html);
         }

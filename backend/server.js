@@ -8,9 +8,20 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS (Production safe)
+// ✅ CORS (Dynamic for Production & Localhost)
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',') 
+  : ['http://localhost:5173', 'http://localhost:3000', 'https://locofy-omega.vercel.app'];
+
 const corsOptions = {
-  origin: ["https://locofy-omega.vercel.app"],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 };
